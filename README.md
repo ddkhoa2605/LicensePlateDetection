@@ -146,23 +146,6 @@ Theo config hien co:
 - Resize interpolation: linear
 - Khong giu nguyen aspect ratio khi resize dau vao OCR
 
-Theo report, model recognition dua tren Compact Convolutional Transformer (CCT) ket hop CNN va Transformer:
-
-- CNN/Conv layers trich xuat dac trung cuc bo nhu net, canh va stroke cua ky tu.
-- Transformer encoder hoc quan he ngu canh tren toan bo bien so theo truc ngang.
-- Positional embedding giu thong tin vi tri.
-- CTC classifier doc chuoi ky tu ma khong can tach tung ky tu thu cong.
-- CTC decoder loai blank `_`, gop ky tu lap va tra ve chuoi bien so cuoi cung.
-
-Ket qua fine-tune trong report:
-
-| Metric | Base | Fine-tuned |
-| --- | ---: | ---: |
-| Character Accuracy | 0.8794 | 0.9899 |
-| Plate Accuracy | 0.6752 | 0.9890 |
-| Loss | 1.8977 | 0.0205 |
-| Plate Length Accuracy | 0.9778 | 1.0000 |
-| Top-3 @ K Accuracy | 0.9118 | 1.0000 |
 
 ## Post-processing va validation
 
@@ -226,7 +209,4 @@ Ung dung hien thi:
 - Valid rate.
 - Anh crop bien so, frame, timestamp, YOLO confidence, OCR/vote confidence va so lan doc OCR.
 
-## Tai lieu tham khao trong project
 
-- `Report.pdf`: mo ta dataset, preprocessing, kien truc model va metrics.
-- `appStreamlit.py`: ma nguon ung dung demo end-to-end.
