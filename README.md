@@ -435,4 +435,3 @@ Detect_Plate/
 - **ByteTrack**: [github.com/ifzhang/ByteTrack](https://github.com/ifzhang/ByteTrack)
 - **OpenCV**: [opencv.org](https://opencv.org/)
 - **Streamlit**: [streamlit.io](https://streamlit.io/)
-- `Report.pdf` — Full description of dataset construction, preprocessing pipeline, model architecture, and evaluation metrics.
