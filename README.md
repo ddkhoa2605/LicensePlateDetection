@@ -179,6 +179,33 @@ results = model.track(frame, persist=True, tracker="bytetrack.yaml", conf=0.35)
 results = model(frame, conf=0.35)
 ```
 
+#### YOLO11n Fine-tuning Results (20 Epochs)
+
+| Epoch | Train Box Loss | Train Cls Loss | Train DFL Loss | Precision | Recall | mAP@50 | mAP@50-95 |
+|------:|---------------:|---------------:|---------------:|----------:|-------:|-------:|----------:|
+| 1  | 1.2184 | 1.3638 | 1.1046 | 0.9515 | 0.9349 | 0.9692 | 0.6401 |
+| 2  | 1.1992 | 0.7273 | 1.0950 | 0.9654 | 0.9479 | 0.9799 | 0.6573 |
+| 3  | 1.1919 | 0.6461 | 1.0874 | 0.9607 | 0.9568 | 0.9786 | 0.6732 |
+| 4  | 1.1612 | 0.6105 | 1.0752 | 0.9832 | 0.9675 | 0.9872 | 0.6724 |
+| 5  | 1.1517 | 0.5803 | 1.0723 | 0.9856 | 0.9729 | 0.9867 | 0.6912 |
+| 6  | 1.1310 | 0.5545 | 1.0644 | 0.9892 | 0.9739 | 0.9914 | 0.6960 |
+| 7  | 1.1109 | 0.5397 | 1.0543 | 0.9874 | 0.9746 | 0.9910 | 0.7056 |
+| 8  | 1.1058 | 0.5206 | 1.0484 | 0.9939 | 0.9713 | 0.9898 | 0.7143 |
+| 9  | 1.1021 | 0.5093 | 1.0457 | 0.9863 | 0.9787 | 0.9930 | 0.7201 |
+| 10 | 1.0888 | 0.4942 | 1.0362 | 0.9946 | 0.9797 | 0.9920 | 0.7286 |
+| 11 | 1.0744 | 0.4635 | 1.0540 | 0.9910 | 0.9729 | 0.9916 | 0.7113 |
+| 12 | 1.0661 | 0.4581 | 1.0535 | 0.9898 | 0.9766 | 0.9926 | 0.7234 |
+| 13 | 1.0565 | 0.4444 | 1.0474 | 0.9946 | 0.9762 | 0.9928 | 0.7375 |
+| 14 | 1.0511 | 0.4292 | 1.0484 | 0.9940 | 0.9796 | 0.9941 | 0.7263 |
+| 15 | 1.0413 | 0.4242 | 1.0369 | 0.9922 | 0.9799 | 0.9937 | 0.7273 |
+| 16 | 1.0291 | 0.4104 | 1.0333 | 0.9909 | 0.9823 | 0.9942 | 0.7333 |
+| 17 | 1.0183 | 0.4008 | 1.0319 | 0.9931 | 0.9834 | 0.9936 | 0.7421 |
+| 18 | 1.0089 | 0.3880 | 1.0228 | 0.9899 | 0.9841 | 0.9942 | 0.7402 |
+| 19 | 1.0020 | 0.3804 | 1.0216 | 0.9905 | 0.9851 | 0.9937 | 0.7389 |
+| **20** | **0.9919** | **0.3666** | **1.0132** | **0.9968** | **0.9817** | **0.9945** | **0.7450** |
+
+> **Best epoch (epoch 20):** mAP@50 = **0.9945** · mAP@50-95 = **0.7450** · Precision = **0.9968** · Recall = **0.9817**
+
 ---
 
 ### Recognition — Compact Convolutional Transformer (CCT)
@@ -199,6 +226,64 @@ results = model(frame, conf=0.35)
 - **Positional embedding** — Preserves character spatial order.
 - **CTC classifier** — Decodes character sequences without manual segmentation.
 - **CTC decoder** — Collapses blank `_` tokens and repeated characters into the final plate string.
+
+#### Model Files Explained
+
+The OCR stage relies on **two paired files** that must always be used together:
+
+##### `cct_s_v1_vn.onnx` — ONNX Model Weights
+
+[ONNX (Open Neural Network Exchange)](https://onnx.ai/) is a vendor-neutral format that serializes the trained CCT model's computational graph and weights into a single portable file.
+
+| Property | Detail |
+|----------|--------|
+| **Format** | ONNX opset 17 |
+| **Size** | ~7.5 MB |
+| **Runtime** | `onnxruntime` (CPU) or `onnxruntime-gpu` (CUDA) |
+| **Input tensor** | `float32 [B, 3, 64, 128]` — batch × RGB channels × H × W |
+| **Output tensor** | `float32 [B, 9, 37]` — 9 plate slots × 37 class logits |
+
+Using ONNX decouples inference from the original PyTorch training framework, enabling faster, dependency-light deployment across platforms.
+
+##### `cct_s_v1_vn_plate_config.yaml` — Model Configuration
+
+This YAML file tells the `fast-plate-ocr` runtime exactly how to pre-process input images and post-process model output to match what the ONNX model expects.
+
+```yaml
+max_plate_slots: 9        # Number of character output heads
+alphabet: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_'  # 37 classes (36 chars + pad)
+pad_char: '_'             # Padding token for plates shorter than 9 chars
+img_height: 64            # Resize all plate crops to this height
+img_width: 128            # Resize all plate crops to this width
+keep_aspect_ratio: false  # Stretch to exact size (no letterbox)
+interpolation: linear     # Resize interpolation method
+image_color_mode: rgb     # 3-channel RGB input (matches ONNX tensor)
+```
+
+**How the two files connect:**
+
+```
+Plate crop (any size)
+        │
+        ▼  [yaml: img_height=64, img_width=128, interpolation=linear, image_color_mode=rgb]
+Resize → float32 tensor [B, 3, 64, 128]
+        │
+        ▼  [onnx: forward pass through CCT]
+Logits tensor [B, 9, 37]
+        │
+        ▼  [yaml: alphabet, pad_char, max_plate_slots]
+Argmax per slot → character lookup → strip '_' padding → plate string
+```
+
+**Fine-tuning results:**
+
+| Metric | Base Model | Fine-tuned |
+|--------|----------:|----------:|
+| Character Accuracy | 0.8794 | **0.9899** |
+| Plate Accuracy | 0.6752 | **0.9890** |
+| Loss | 1.8977 | **0.0205** |
+| Plate Length Accuracy | 0.9778 | **1.0000** |
+| Top-3 @ K Accuracy | 0.9118 | **1.0000** |
 
 ---
 
@@ -273,6 +358,24 @@ Open your browser at `http://localhost:8501`, upload a video file (`.mp4`, `.avi
 
 ## Results
 
+### YOLO11n Detection — Training Summary
+
+Model trained for **20 epochs** on the Vietnamese license plate detection dataset. Key metrics at final epoch:
+
+| Metric | Value |
+|--------|------:|
+| **mAP@50** | **0.9945** |
+| **mAP@50-95** | **0.7450** |
+| **Precision** | **0.9968** |
+| **Recall** | **0.9817** |
+| **Val Box Loss** | 1.0102 |
+| **Val Cls Loss** | 0.3658 |
+| **Val DFL Loss** | 1.0014 |
+
+> Losses converged steadily across all 20 epochs. Classification loss dropped from **1.364 → 0.367** and box loss from **1.218 → 0.992**, confirming stable learning without overfitting.
+
+### App Output
+
 The Streamlit app provides:
 
 | Output | Description |
@@ -310,3 +413,4 @@ Detect_Plate/
 - **ByteTrack**: [github.com/ifzhang/ByteTrack](https://github.com/ifzhang/ByteTrack)
 - **OpenCV**: [opencv.org](https://opencv.org/)
 - **Streamlit**: [streamlit.io](https://streamlit.io/)
+- `Report.pdf` — Full description of dataset construction, preprocessing pipeline, model architecture, and evaluation metrics.
