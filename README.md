@@ -281,15 +281,6 @@ Logits tensor [B, 9, 37]
 Argmax per slot → character lookup → strip '_' padding → plate string
 ```
 
-**Fine-tuning results:**
-
-| Metric | Base Model | Fine-tuned |
-|--------|----------:|----------:|
-| Character Accuracy | 0.8794 | **0.9899** |
-| Plate Accuracy | 0.6752 | **0.9890** |
-| Loss | 1.8977 | **0.0205** |
-| Plate Length Accuracy | 0.9778 | **1.0000** |
-| Top-3 @ K Accuracy | 0.9118 | **1.0000** |
 
 ---
 
