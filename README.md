@@ -12,6 +12,9 @@
 
 [📋 Overview](#overview) · [🗃️ Data Collection](#data-collection) · [📦 Dataset](#dataset) · [🧠 Models](#models) · [🚀 Quick Start](#quick-start) · [📊 Results](#results) · [🗂️ Project Structure](#project-structure)
 
+![Demo Screenshot](images/demo_screenshot.png)
+
+
 </div>
 
 ---
@@ -206,6 +209,9 @@ results = model(frame, conf=0.35)
 
 > **Best epoch (epoch 20):** mAP@50 = **0.9945** · mAP@50-95 = **0.7450** · Precision = **0.9968** · Recall = **0.9817**
 
+![Training curves](images/training_curves.png)
+
+
 ---
 
 ### Recognition — Compact Convolutional Transformer (CCT)
@@ -387,6 +393,16 @@ The Streamlit app provides:
 | **Valid Rate** | Percentage of detections matching the plate format regex |
 | **Per-detection detail** | Crop image · frame · timestamp · YOLO conf · OCR/vote conf · read count |
 
+<video src="images/demo.mp4" controls width="100%"></video>
+
+<table>
+  <tr>
+    <td><img src="images/demo_result1.png" width="100%"/></td>
+    <td><img src="images/demo_result2.png" width="100%"/></td>
+  </tr>
+</table>
+
+
 ---
 
 ## Project Structure
@@ -398,6 +414,12 @@ Detect_Plate/
 ├── cct_s_v1_vn.onnx                 # CCT OCR model (ONNX format)
 ├── cct_s_v1_vn_plate_config.yaml    # OCR model configuration
 ├── Report.pdf                       # Full project report
+├── images/                          # Media assets for README
+│   ├── demo_banner.gif              #   → GIF/video demo tổng quan
+│   ├── crawl_examples.jpg           #   → Ảnh ví dụ frame crawl / crop biển số
+│   ├── training_curves.png          #   → Biểu đồ loss & mAP theo epoch
+│   ├── pipeline_diagram.png         #   → Sơ đồ pipeline inference
+│   └── app_screenshot.png           #   → Ảnh chụp giao diện Streamlit
 └── Video_Test/
     ├── Download.mp4
     ├── cam_20250922_181322.mp4
